@@ -9,12 +9,12 @@ The stack is deliberately small:
 - FastAPI exposes liveness, readiness, and a minimal item API.
 - PostgreSQL is reachable only from the internal backend network.
 
-## Part 04 baseline
+## Dockerfile layer and cache baseline
 
 The initial Dockerfile is intentionally cache-unfriendly: it copies the complete build context
-before installing the Python project. The `part-04` article measures why application-only changes
-therefore repeat dependency installation. Do not treat this tag as the production image; Part 05
-will replace it with the optimized multi-stage build.
+before installing the Python project. The `dockerfile-layer-cache-optimization` checkpoint measures
+why application-only changes therefore repeat dependency installation. Do not treat this tag as the
+production image; a future checkpoint will replace it with the optimized multi-stage build.
 
 ## Run
 
@@ -45,8 +45,8 @@ docker compose config --quiet
 
 ## Article checkpoints
 
-`main` contains the latest lab. Immutable tags `part-04` through `part-16` correspond to the article
-that introduced each checkpoint; the first three articles predate this lab.
+`main` contains the latest lab. Each immutable checkpoint tag uses the corresponding article slug;
+the first three articles predate this lab.
 
 ## License
 

@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Part 04 intentionally copies the whole context before dependency installation.
+# This cache baseline intentionally copies the whole context before dependency installation.
 # An application-only change therefore invalidates this expensive layer.
 COPY . .
 RUN python -m pip install --no-cache-dir .

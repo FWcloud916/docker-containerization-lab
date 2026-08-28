@@ -1,4 +1,4 @@
-# Part 04 cache checkpoint
+# Dockerfile layer and cache checkpoint
 
 Verification date: 2026-08-28 (Asia/Taipei)
 
@@ -13,7 +13,7 @@ Verification date: 2026-08-28 (Asia/Taipei)
 
 ## Procedure
 
-All runs used the Part 04 Dockerfile and:
+All runs used the cache-baseline Dockerfile and:
 
 ```bash
 /usr/bin/time -p docker build --progress=plain -t <checkpoint> .
@@ -22,7 +22,7 @@ All runs used the Part 04 Dockerfile and:
 1. Build the unchanged source after a successful Compose build.
 2. Change only `app/main.py` mtime with `touch`, then build again.
 3. Add one temporary source-code comment without changing project dependencies, then build again.
-4. Remove the temporary comment so the repository returns to the reviewed Part 04 source.
+4. Remove the temporary comment so the repository returns to the reviewed baseline source.
 
 The timings are one local observation, not a cross-machine benchmark. Cache hit/miss state in the
 plain BuildKit output is the primary result.
@@ -36,5 +36,5 @@ plain BuildKit output is the primary result.
 | application source bytes changed | executed | executed (8.8 s) | 11.32 s |
 
 The source-only change forced dependency installation because the baseline Dockerfile performs
-`COPY . .` before `RUN python -m pip install --no-cache-dir .`. Part 05 will change that structure;
-Part 04 intentionally preserves it.
+`COPY . .` before `RUN python -m pip install --no-cache-dir .`. A future checkpoint will change that
+structure; this checkpoint intentionally preserves it.
