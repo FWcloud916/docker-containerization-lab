@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run pytest
+      - run: uv run ruff check
+      - run: uv run ruff format --check
+      - run: docker compose config --quiet
+      - run: docker compose up --build --wait
+      - name: Exercise the public API
+        run: |
+          curl --fail http://127.0.0.1:8080/livez
+          curl --fail http://127.0.0.1:8080/readyz
+          curl --fail --request POST http://127.0.0.1:8080/items \
+            --header 'content-type: application/json' \
+            --data '{"name":"ci item"}'
+          curl --fail http://127.0.0.1:8080/items | grep 'ci item'
+      - if: always()
+        run: docker compose down --volumes
