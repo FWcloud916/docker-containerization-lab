@@ -7,6 +7,16 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runtime: slim
+            compose_files: ""
+          - runtime: alpine
+            compose_files: "-f compose.yaml -f variants/compose.alpine.yaml"
+          - runtime: distroless
+            compose_files: "-f compose.yaml -f variants/compose.distroless.yaml"
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -16,8 +26,8 @@ jobs:
       - run: uv run pytest
       - run: uv run ruff check
       - run: uv run ruff format --check
-      - run: docker compose config --quiet
-      - run: docker compose up --build --wait
+      - run: docker compose ${{ matrix.compose_files }} config --quiet
+      - run: docker compose ${{ matrix.compose_files }} up --build --wait
       - name: Exercise the public API
         run: |
           curl --fail http://127.0.0.1:8080/livez
@@ -27,4 +37,4 @@ jobs:
             --data '{"name":"ci item"}'
           curl --fail http://127.0.0.1:8080/items | grep 'ci item'
       - if: always()
-        run: docker compose down --volumes
+        run: docker compose ${{ matrix.compose_files }} down --volumes

@@ -1,0 +1,41 @@
+# syntax=docker/dockerfile:1
+
+ARG BUILDER_IMAGE=python:3.13-slim-trixie@sha256:7ce4b6dfe35e55397b7cda544f8a13f191b7ae28dc5aad71fe664dbc9bc2623f
+ARG RUNTIME_IMAGE=gcr.io/distroless/python3-debian13:nonroot@sha256:f3d5ddc6c64a019fe520e7f005f2880be21e6afc461b10a3c15ef2e4edc71e33
+ARG UV_VERSION=0.11.25
+
+FROM ${BUILDER_IMAGE} AS builder
+ARG UV_VERSION
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+
+WORKDIR /app
+
+# Distroless Python is /usr/bin/python. Create the same path before the venv
+# so its interpreter links remain valid after copying it into the runtime.
+RUN ln -s /usr/local/bin/python /usr/bin/python \
+    && /usr/bin/python -m pip install --no-cache-dir "uv==${UV_VERSION}"
+
+COPY pyproject.toml uv.lock ./
+RUN --mount=type=cache,id=uv-distroless,target=/root/.cache/uv \
+    uv sync --python /usr/bin/python --frozen --no-dev --no-install-project
+
+FROM ${RUNTIME_IMAGE} AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/app/.venv/bin:${PATH}"
+
+WORKDIR /app
+
+COPY --from=builder --chown=65532:65532 /app/.venv /app/.venv
+COPY --chown=65532:65532 app /app/app
+
+USER nonroot
+
+EXPOSE 8000
+ENTRYPOINT ["/app/.venv/bin/python", "-m", "uvicorn"]
+CMD ["app.main:app", "--host", "0.0.0.0", "--port", "8000"]
